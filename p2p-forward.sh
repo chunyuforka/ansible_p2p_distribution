@@ -302,7 +302,14 @@ fi
 
 echo "删除临时锁目录: $lock_dir"
 rm -rf "$lock_dir"
-
-echo "所有下游节点传输完成，程序退出。"
-exit 0
-
+# -------------------------------
+# 6. 传输完成后，检查目标路径是否存在
+# -------------------------------
+echo "检查目标路径是否成功传输: ${dest_path}/${src_item} ..."
+if [ -e "${dest_path}/${src_item}" ]; then
+    echo "✅ 文件/目录成功传输: ${dest_path}/${src_item}"
+    exit 0
+else
+    echo "❌ Error: 目标路径 ${dest_path}/${src_item} 不存在，传输失败！"
+    exit 1
+fi

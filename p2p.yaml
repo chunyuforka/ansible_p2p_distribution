@@ -4,10 +4,9 @@
 
   vars:
     fork: 3
-    src_path: /data/wangtingwei/ansible-deliver
-    dest_path: "/opt/install-init-test"
-    rsync_port: 41873
-    p2p_script: "/usr/local/bin/p2p_forward.sh"
+    src_path: /path/to/src      # file or dir 
+    dest_path: "/path/to/dest"  # path
+    rsync_port: 41873           # rsync daemon listen port 
 
   tasks:
     - name: 设置并打印全量 IP 地址列表
