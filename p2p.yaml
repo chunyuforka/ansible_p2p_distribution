@@ -1,0 +1,37 @@
+- hosts: all
+  gather_facts: true
+  become: true
+
+  vars:
+    fork: 3
+    src_path: /data/wangtingwei/ansible-deliver
+    dest_path: "/opt/install-init-test"
+    rsync_port: 41873
+    p2p_script: "/usr/local/bin/p2p_forward.sh"
+
+  tasks:
+    - name: 设置并打印全量 IP 地址列表
+      delegate_to: localhost
+      run_once: true
+      set_fact:
+        global_inventory_ips: >-
+          {{ (['localhost'] + ((hostvars | dict2items | map(attribute='value.ansible_default_ipv4.address') | list) | difference(['ocalhost']))) | join(',') }}
+
+    - name: 执行 p2p_forward.sh 脚本
+      block:
+        - name: 主控机异步执行分发脚本
+          delegate_to: localhost
+          connection: localhost
+          async: 600
+          poll: 0
+          shell: >
+            p2p_forward.sh "{{ global_inventory_ips }}" "localhost" "{{ fork }}" "{{ src_path }}" "{{ dest_path }}" "{{ rsync_port }}"
+          args:
+            executable: /bin/bash
+
+        - name: 目标节点执行 p2p_forward.sh 完成 P2P 分发
+          script: >
+            p2p-forward.sh "{{ global_inventory_ips }}" "{{ ansible_default_ipv4.address }}" "{{ fork }}" "{{ src_path }}" "{{ dest_path }}" "{{ rsync_port }}"
+          args:
+            executable: /bin/bash
+
