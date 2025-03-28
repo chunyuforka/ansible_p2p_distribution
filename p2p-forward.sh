@@ -149,6 +149,30 @@ EOF
 fi
 
 # -------------------------------
+# 辅助函数：检测文件是否存在
+# -------------------------------
+check_file_exists_within_timeout() {
+    local target_path="$1"
+    local max_wait="${2:-60}"    # 默认最大等待时间 60 秒
+    local interval="${3:-2}"     # 默认每隔 2 秒检查一次
+
+    echo "🔍 正在检测文件/目录是否存在: $target_path"
+
+    local elapsed=0
+    while [ $elapsed -lt $max_wait ]; do
+        if [ -e "$target_path" ]; then
+            echo "✅ 文件/目录成功检测到: $target_path"
+            return 0
+        fi
+        sleep $interval
+        elapsed=$((elapsed + interval))
+    done
+
+    echo "❌ Error: 在 $max_wait 秒内未检测到目标路径 $target_path，传输可能失败或延迟！"
+    return 1
+}
+
+# -------------------------------
 # 3. 非控制机节点：轮询检测锁文件是否接收完毕
 # -------------------------------
 if [ "$skip_listen" = "false" ]; then
@@ -168,6 +192,7 @@ if [ "$skip_listen" = "false" ]; then
         fi
     done
     echo "检测到锁文件 $LOCK_FILE，确认上游传输完成。"
+    check_file_exists_within_timeout "${dest_path}/${src_item}"
     echo "----------------------------------"
 else
     echo "控制机跳过等待锁文件步骤。"
@@ -302,14 +327,9 @@ fi
 
 echo "删除临时锁目录: $lock_dir"
 rm -rf "$lock_dir"
+
 # -------------------------------
 # 6. 传输完成后，检查目标路径是否存在
 # -------------------------------
 echo "检查目标路径是否成功传输: ${dest_path}/${src_item} ..."
-if [ -e "${dest_path}/${src_item}" ]; then
-    echo "✅ 文件/目录成功传输: ${dest_path}/${src_item}"
-    exit 0
-else
-    echo "❌ Error: 目标路径 ${dest_path}/${src_item} 不存在，传输失败！"
-    exit 1
-fi
+check_file_exists_within_timeout "${dest_path}/${src_item}"
