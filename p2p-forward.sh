@@ -153,7 +153,7 @@ fi
 # -------------------------------
 check_file_exists_within_timeout() {
     local target_path="$1"
-    local max_wait="${2:-60}"    # 默认最大等待时间 60 秒
+    local max_wait="${2:-600}"    # 默认最大等待时间 60 秒
     local interval="${3:-2}"     # 默认每隔 2 秒检查一次
 
     echo "🔍 正在检测文件/目录是否存在: $target_path"
@@ -177,7 +177,7 @@ check_file_exists_within_timeout() {
 # -------------------------------
 if [ "$skip_listen" = "false" ]; then
     echo "轮询检测是否接收到锁文件：$LOCK_FILE"
-    LOCK_TIMEOUT=300  # 超时时间 300 秒
+    LOCK_TIMEOUT=900  # 超时时间 300 秒
     WAIT_INTERVAL=5   # 检测间隔 5 秒
     elapsed=0
     while [ ! -f "$LOCK_FILE" ]; do
@@ -227,7 +227,7 @@ wait_for_remote() {
 rsync_transfer() {
     local src="$1"
     local dest_url="$2"
-    rsync -avz "$src" "$dest_url" > /dev/null
+    rsync -avz --inplace --partial "$src" "$dest_url" > /dev/null
     return $?
 }
 
